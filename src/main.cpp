@@ -2,78 +2,69 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Wire.h>
-#include <U8g2lib.h>
 #include "imhr_secrets.h"
 #include "imhr_endpoints.h"
 #include "imhr_wifi.h"
 #include "imhr_http_client.h"
-
-U8G2_SH1106_128X64_NONAME_F_HW_I2C display(U8G2_R0, U8X8_PIN_NONE);
+#include "imhr_display.h"
+#include "imhr_json_keys.h"
 
 const char *stationId = HVV_STATION_ID;
+const uint32_t wifiRetryDelay = 600000;     // 10 minutes
+const uint32_t readableMessageDelay = 2000; // 2 seconds
+const uint32_t refreshInterval = 30000;     // 30 seconds
 
-String buildBody() {
-  return String(R"({"version":54,"station":{"id":")") 
-       + HVV_STATION_ID 
-       + R"(","type":"STATION"},"time":{"date":"heute","time":"jetzt"},"maxList":5,"maxTimeOffset":60,"useRealtime":true})";
+String buildBody()
+{
+  return String(R"({"version":54,"station":{"id":")") + HVV_STATION_ID + R"(","type":"STATION"},"time":{"date":"heute","time":"jetzt"},"maxList":5,"maxTimeOffset":60,"useRealtime":true})";
 }
 
 void setup()
 {
   Serial.begin(115200);
-  while (!connectWiFi())
+  imhr::displayInit();
+  while (!imhr::connectWiFi())
   {
-    delay(600000);
+    imhr::displayMessage("!", "wifi problem");
+    delay(wifiRetryDelay);
   }
-  display.begin();
-  display.clearBuffer();
-  display.setFont(u8g2_font_ncenB08_tr);
-  display.drawStr(0, 12, "connected!");
-  display.sendBuffer();
+  imhr::displayMessage(":)", "wifi connected!");
+  delay(readableMessageDelay);
 }
 
 void loop()
 {
   String body = buildBody();
   String url = String(BASE_URL_GTI_PUBLIC) + ENDPOINT_DEPARTURE_LIST;
-  HttpResponse response = sendPostRequest(url, body);
+  imhr::HttpResponse response = imhr::sendPostRequest(url, body);
   if (response.success())
   {
     JsonDocument doc;
     deserializeJson(doc, response.body);
 
-    for (JsonObject dep : doc["departures"].as<JsonArray>())
+    for (JsonObject dep : doc[JSON_KEY_DEPARTURES].as<JsonArray>())
     {
-      String line = dep["line"]["name"].as<String>();
-      String dir = dep["line"]["direction"].as<String>();
-      int mins = dep["timeOffset"].as<int>() + dep["delay"].as<int>();
-      int del = dep["delay"].as<int>();
+      String line = dep[JSON_KEY_LINE][JSON_KEY_NAME].as<String>();
+      String dir = dep[JSON_KEY_LINE][JSON_KEY_DIRECTION].as<String>();
+      int del = dep[JSON_KEY_DELAY].as<int>() / 60; // looks like seconds to me
+      int mins = dep[JSON_KEY_TIME_OFFSET].as<int>() + del;
       Serial.printf("%-6s → %-25s in %2d min", line.c_str(), dir.c_str(), mins);
       if (del > 0)
         Serial.printf(" (+%d delay)", del);
-      Serial.println();
+      Serial.println("");
     }
-
-    JsonObject next = doc["departures"][0];
-    int mins = next["timeOffset"].as<int>() + next["delay"].as<int>();
-    String line = next["line"]["name"].as<String>();
-
-    char line1[32];
-    char line2[32];
-    snprintf(line1, sizeof(line1), "Bus %s", line.c_str());
-    snprintf(line2, sizeof(line2), "%d min", mins);
-
-    display.clearBuffer();
-    display.setFont(u8g2_font_logisoso28_tr); // big font
-    display.drawStr(0, 30, line1);
-    display.drawStr(0, 62, line2);
-    display.sendBuffer();
+    JsonObject next = doc[JSON_KEY_DEPARTURES][0];
+    int mins = next[JSON_KEY_TIME_OFFSET].as<int>() + (next[JSON_KEY_DELAY].as<int>() / 60);
+    String line = next[JSON_KEY_LINE][JSON_KEY_NAME].as<String>();
+    imhr::displayDeparture(line.c_str(), mins);
+    Serial.println("----------");
   }
   else
   {
     Serial.printf("HTTP error: %d\n", response.code);
     Serial.println(response.body);
+    imhr::displayMessage("HTTP error", String(response.code).c_str());
   }
 
-  delay(30000);
+  delay(refreshInterval);
 }

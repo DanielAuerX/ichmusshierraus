@@ -1,3 +1,6 @@
 #pragma once
 
-bool connectWiFi();
+namespace imhr
+{
+    bool connectWiFi();
+}

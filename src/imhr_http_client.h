@@ -2,12 +2,16 @@
 
 #include <Arduino.h>
 
-struct HttpResponse {
-    int code;
-    String body;
-    bool success() const { return code == 200; }
-};
+namespace imhr
+{
+    struct HttpResponse
+    {
+        int code;
+        String body;
+        bool success() const { return code == 200; }
+    };
 
-String signRequest(const char *payload, const char *secret);
+    String signRequest(const char *payload, const char *secret);
 
-HttpResponse sendPostRequest(const String &url, const String &body);
+    HttpResponse sendPostRequest(const String &url, const String &body);
+}
