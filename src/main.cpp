@@ -1,17 +1,15 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
-#include <base64.h>
-#include "mbedtls/md.h"
 #include <Wire.h>
 #include <U8g2lib.h>
-#include "secrets.h"
+#include "imhr_secrets.h"
+#include "imhr_endpoints.h"
 #include "imhr_wifi.h"
+#include "imhr_http_client.h"
 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C display(U8G2_R0, U8X8_PIN_NONE);
 
-const char *hvvUser   = HVV_USER;
-const char *hvvSecret = HVV_SECRET;
 const char *stationId = HVV_STATION_ID;
 
 String buildBody() {
@@ -23,7 +21,10 @@ String buildBody() {
 void setup()
 {
   Serial.begin(115200);
-  connectWiFi();
+  while (!connectWiFi())
+  {
+    delay(600000);
+  }
   display.begin();
   display.clearBuffer();
   display.setFont(u8g2_font_ncenB08_tr);
@@ -31,34 +32,15 @@ void setup()
   display.sendBuffer();
 }
 
-String signRequest(const char *payload, const char *secret)
-{
-  byte hmac[20];
-  mbedtls_md_context_t ctx;
-  mbedtls_md_init(&ctx);
-  mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA1), 1);
-  mbedtls_md_hmac_starts(&ctx, (unsigned char *)secret, strlen(secret));
-  mbedtls_md_hmac_update(&ctx, (unsigned char *)payload, strlen(payload));
-  mbedtls_md_hmac_finish(&ctx, hmac);
-  mbedtls_md_free(&ctx);
-  return base64::encode(hmac, 20);
-}
-
 void loop()
 {
   String body = buildBody();
-  String signature = signRequest(body.c_str(), hvvSecret);
-  HTTPClient http;
-  http.begin("https://gti.geofox.de/gti/public/departureList");
-  http.addHeader("Content-Type", "application/json");
-  http.addHeader("geofox-auth-user", hvvUser);
-  http.addHeader("geofox-auth-signature", signature);
-
-  int code = http.POST((uint8_t *)body.c_str(), body.length());
-  if (code == 200)
+  String url = String(BASE_URL_GTI_PUBLIC) + ENDPOINT_DEPARTURE_LIST;
+  HttpResponse response = sendPostRequest(url, body);
+  if (response.success())
   {
     JsonDocument doc;
-    deserializeJson(doc, http.getStream());
+    deserializeJson(doc, response.body);
 
     for (JsonObject dep : doc["departures"].as<JsonArray>())
     {
@@ -89,10 +71,9 @@ void loop()
   }
   else
   {
-    Serial.printf("HTTP error: %d\n", code);
-    Serial.println(http.getString());
+    Serial.printf("HTTP error: %d\n", response.code);
+    Serial.println(response.body);
   }
 
-  http.end();
-  delay(60000);
+  delay(30000);
 }

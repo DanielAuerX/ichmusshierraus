@@ -1,11 +1,11 @@
 #include "imhr_wifi.h"
 #include <WiFi.h>
-#include "secrets.h"
+#include "imhr_secrets.h"
 
 const char *ssid      = WIFI_SSID;
 const char *password  = WIFI_PASSWORD;
 
-void connectWiFi()
+bool connectWiFi()
 {
     Serial.println("connecting to wifi...");
     WiFi.begin(ssid, password);
@@ -17,10 +17,9 @@ void connectWiFi()
         Serial.print(".");
         if (++attempts > 20)
         {
-            Serial.println("\nfailed :( check ssid/password");
-            while (true)
-                delay(1000);
+            return false;
         }
     }
     Serial.println("\nwifi connected — ip: " + WiFi.localIP().toString());
+    return true;
 }
