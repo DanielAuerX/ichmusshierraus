@@ -20,19 +20,48 @@ namespace imhr
         display.sendBuffer();
     }
 
-    void displayDeparture(const char *line, int mins)
+    static void drawDepartureLine(const char *label, const char *minsStr, int y)
     {
-        String secondLine = (mins == 0) ? "sofort" : String(mins) + " min";
-        if (mins == 0) {}
-        char line1[32];
-        char line2[32];
-        snprintf(line1, sizeof(line1), "Bus %s", line);
-        snprintf(line2, sizeof(line2), secondLine.c_str());
+        display.setFont(u8g2_font_logisoso16_tr);
+        display.drawStr(0, y, label);
+
+        int strW = display.getStrWidth(minsStr);
+        display.drawStr(128 - strW, y, minsStr);
+    }
+
+    void displayDeparture(const char *busLine, int busMins,
+                          const char *trainPlatform, int trainMins)
+    {
+        char busLabel[16];
+        char trainLabel[16];
+        snprintf(busLabel, sizeof(busLabel), "%s", busLine);
+
+        if (trainPlatform && strlen(trainPlatform) > 0)
+            snprintf(trainLabel, sizeof(trainLabel), trainPlatform);
+        else
+            snprintf(trainLabel, sizeof(trainLabel), "Zug");
+
+        char busMinsStr[12];
+        char trainMinsStr[12];
+
+        if (busMins < 0)
+            snprintf(busMinsStr, sizeof(busMinsStr), "--");
+        else if (busMins == 0)
+            snprintf(busMinsStr, sizeof(busMinsStr), "sofort");
+        else
+            snprintf(busMinsStr, sizeof(busMinsStr), "%d min", busMins);
+
+        if (trainMins < 0)
+            snprintf(trainMinsStr, sizeof(trainMinsStr), "--");
+        else if (trainMins == 0)
+            snprintf(trainMinsStr, sizeof(trainMinsStr), "sofort");
+        else
+            snprintf(trainMinsStr, sizeof(trainMinsStr), "%d min", trainMins);
 
         display.clearBuffer();
-        display.setFont(u8g2_font_logisoso28_tr);
-        display.drawStr(0, 30, line1);
-        display.drawStr(0, 62, line2);
+        drawDepartureLine(busLabel, busMinsStr, 20);
+        drawDepartureLine(trainLabel, trainMinsStr, 48);
         display.sendBuffer();
     }
+
 }

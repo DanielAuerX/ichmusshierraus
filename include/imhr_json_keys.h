@@ -11,3 +11,5 @@
 #define JSON_KEY_TIME_OFFSET "timeOffset"
 #define JSON_KEY_DELAY "delay"
 #define JSON_KEY_NAME "name"
+#define JSON_KEY_PLATFORM "platform"
+#define JSON_KEY_REALTIME_PLATFORM "realtimePlatform"
