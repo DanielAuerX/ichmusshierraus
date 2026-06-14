@@ -10,13 +10,22 @@ namespace imhr
         display.begin();
     }
 
+    static void drawCenteredStr(const char *text, int y)
+    {
+        int width = display.getStrWidth(text);
+        display.drawStr((128 - width) / 2, y, text);
+    }
+
     void displayMessage(const char *line1, const char *line2)
     {
         display.clearBuffer();
+
+        display.setFont(u8g2_font_ncenB14_tr);
+        drawCenteredStr(line1, 30);
+
         display.setFont(u8g2_font_ncenB08_tr);
-        display.drawStr(0, 12, line1);
-        if (line2)
-            display.drawStr(0, 28, line2);
+        drawCenteredStr(line2, 50);
+
         display.sendBuffer();
     }
 
@@ -27,6 +36,16 @@ namespace imhr
 
         int strW = display.getStrWidth(minsStr);
         display.drawStr(128 - strW, y, minsStr);
+    }
+
+    static void determineMinuteDisplay(char *minuteDisplay, size_t size, int minutes)
+    {
+        if (minutes < 0)
+            snprintf(minuteDisplay, size, "--");
+        else if (minutes == 0)
+            snprintf(minuteDisplay, size, "sofort");
+        else
+            snprintf(minuteDisplay, size, "%d min", minutes);
     }
 
     void displayDeparture(const char *busLine, int busMins,
@@ -43,20 +62,8 @@ namespace imhr
 
         char busMinsStr[12];
         char trainMinsStr[12];
-
-        if (busMins < 0)
-            snprintf(busMinsStr, sizeof(busMinsStr), "--");
-        else if (busMins == 0)
-            snprintf(busMinsStr, sizeof(busMinsStr), "sofort");
-        else
-            snprintf(busMinsStr, sizeof(busMinsStr), "%d min", busMins);
-
-        if (trainMins < 0)
-            snprintf(trainMinsStr, sizeof(trainMinsStr), "--");
-        else if (trainMins == 0)
-            snprintf(trainMinsStr, sizeof(trainMinsStr), "sofort");
-        else
-            snprintf(trainMinsStr, sizeof(trainMinsStr), "%d min", trainMins);
+        determineMinuteDisplay(busMinsStr, sizeof(busMinsStr), busMins);
+        determineMinuteDisplay(trainMinsStr, sizeof(trainMinsStr), trainMins);
 
         display.clearBuffer();
         drawDepartureLine(busLabel, busMinsStr, 20);
