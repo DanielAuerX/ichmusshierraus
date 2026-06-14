@@ -4,8 +4,8 @@
 
 namespace imhr
 {
-    const char *ssid = WIFI_SSID;
-    const char *password = WIFI_PASSWORD;
+    static const char *ssid = WIFI_SSID;
+    static const char *password = WIFI_PASSWORD;
 
     bool connectWiFi()
     {

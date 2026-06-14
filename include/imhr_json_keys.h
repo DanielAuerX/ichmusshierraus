@@ -13,3 +13,7 @@
 #define JSON_KEY_NAME "name"
 #define JSON_KEY_PLATFORM "platform"
 #define JSON_KEY_REALTIME_PLATFORM "realtimePlatform"
+#define JSON_KEY_VERSION "version"
+#define JSON_KEY_SERVICE_TYPES "serviceTypes"
+#define JSON_KEY_STATION "station"
+#define JSON_KEY_ID "id"

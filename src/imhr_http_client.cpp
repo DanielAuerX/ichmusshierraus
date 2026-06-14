@@ -6,10 +6,10 @@
 
 namespace imhr
 {
-    const char *hvvUser = HVV_USER;
-    const char *hvvSecret = HVV_SECRET;
+    static const char *hvvUser = HVV_USER;
+    static const char *hvvSecret = HVV_SECRET;
 
-    String signRequest(const char *payload, const char *secret)
+    static String signRequest(const char *payload, const char *secret)
     {
         byte hmac[20];
         mbedtls_md_context_t ctx;
