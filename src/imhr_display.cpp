@@ -8,6 +8,17 @@ namespace imhr
     void displayInit()
     {
         display.begin();
+        
+    }
+
+    void displaySleep()
+    {
+        display.setPowerSave(1);
+    }
+
+    void displayWake()
+    {
+        display.setPowerSave(0);
     }
 
     static void drawCenteredStr(const char *text, int y)
