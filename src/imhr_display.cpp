@@ -1,4 +1,5 @@
 #include "imhr_display.h"
+#include "imhr_display_logic.h"
 
 namespace imhr
 {
@@ -52,16 +53,6 @@ namespace imhr
 
         int strW = display.getUTF8Width(minsStr);
         display.drawUTF8(128 - strW, y, minsStr);
-    }
-
-    static void determineMinuteDisplay(char *minuteDisplay, size_t size, int minutes)
-    {
-        if (minutes < 0)
-            snprintf(minuteDisplay, size, "--");
-        else if (minutes == 0)
-            snprintf(minuteDisplay, size, "sofort");
-        else
-            snprintf(minuteDisplay, size, "%d min", minutes);
     }
 
     void displayDeparture(const char *busLine, int busMins,
