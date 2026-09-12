@@ -22,3 +22,4 @@
 #define JSON_KEY_SUMMARY "summary"
 #define JSON_KEY_LANGUAGE "language"
 #define JSON_KEY_REASON "reason"
+#define JSON_KEY_NAMES "names"

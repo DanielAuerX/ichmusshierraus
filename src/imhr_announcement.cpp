@@ -33,6 +33,7 @@ namespace imhr
         JsonDocument doc;
         doc[JSON_KEY_VERSION] = 54;
         doc[JSON_KEY_LANGUAGE] = "de";
+        doc[JSON_KEY_NAMES][0] = ANNOUNCEMENT_LINE; // ask the server to scope results instead of returning the whole network's announcements
         String body;
         serializeJson(doc, body);
         return body;
@@ -56,6 +57,7 @@ namespace imhr
 
         HTTPClient http;
         http.begin(announcementsUrl);
+        http.setTimeout(15000); // large response body; default stream read timeout is too short
         http.addHeader("Content-Type", "application/json");
         http.addHeader("geofox-auth-user", HVV_USER);
         http.addHeader("geofox-auth-signature", signature);

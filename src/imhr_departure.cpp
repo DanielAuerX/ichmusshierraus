@@ -142,14 +142,15 @@ namespace imhr
     TrainDeparture fetchTrainDeparture()
     {
         int minutesDisplay = -1;
-        String lineDisplay = "Zug";
+        String lineDisplay = HVV_LINE_TRAIN;
 
         fetchDepartures(buildTrainBody(), "Train", [&](JsonObject &departure)
                         {
+        String line = departure[JSON_KEY_LINE][JSON_KEY_NAME].as<String>();
         String direction = departure[JSON_KEY_LINE][JSON_KEY_DIRECTION].as<String>();
-        if (isWrongDirection(direction))
+        if (line != HVV_LINE_TRAIN || isWrongDirection(direction))
             return false; // skip.. ich muss hier raus
- 
+
         int delay = getDelayInMinutes(departure);
         minutesDisplay = departure[JSON_KEY_TIME_OFFSET].as<int>() + trainBufferMins + delay;
         lineDisplay = formatPlatformLabel(departure);
@@ -162,8 +163,8 @@ namespace imhr
     BusDeparture fetchBusDeparture()
     {
         int minutesDisplay = -1;
-        String lineDisplay = "Bus";
-        bool isFirst = true;
+        String lineDisplay = HVV_LINE_BUS;
+        bool found = false;
 
         fetchDepartures(buildBusBody(), "Bus", [&](JsonObject &departure)
                         {
@@ -173,11 +174,11 @@ namespace imhr
                             int minutes = departure[JSON_KEY_TIME_OFFSET].as<int>() + delay;
                             logCurrentDeparture(minutes, direction, line, delay);
 
-                            if (isFirst)
+                            if (!found && line == HVV_LINE_BUS)
                             {
                                 minutesDisplay = minutes;
                                 lineDisplay = line;
-                                isFirst = false;
+                                found = true;
                             }
                             return false; // log all departures
                         });

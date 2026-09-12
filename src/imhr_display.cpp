@@ -28,18 +28,18 @@ namespace imhr
 
     static void drawCenteredStr(const char *text, int y)
     {
-        int width = display.getStrWidth(text);
-        display.drawStr((128 - width) / 2, y, text);
+        int width = display.getUTF8Width(text);
+        display.drawUTF8((128 - width) / 2, y, text);
     }
 
     void displayMessage(const char *line1, const char *line2)
     {
         display.clearBuffer();
 
-        display.setFont(u8g2_font_ncenB14_tr);
+        display.setFont(u8g2_font_ncenB14_tf);
         drawCenteredStr(line1, 30);
 
-        display.setFont(u8g2_font_ncenB08_tr);
+        display.setFont(u8g2_font_ncenB08_tf);
         drawCenteredStr(line2, 50);
 
         display.sendBuffer();
@@ -47,11 +47,11 @@ namespace imhr
 
     static void drawDepartureLine(const char *label, const char *minsStr, int y)
     {
-        display.setFont(u8g2_font_logisoso16_tr);
-        display.drawStr(0, y, label);
+        display.setFont(u8g2_font_logisoso16_tf);
+        display.drawUTF8(0, y, label);
 
-        int strW = display.getStrWidth(minsStr);
-        display.drawStr(128 - strW, y, minsStr);
+        int strW = display.getUTF8Width(minsStr);
+        display.drawUTF8(128 - strW, y, minsStr);
     }
 
     static void determineMinuteDisplay(char *minuteDisplay, size_t size, int minutes)
@@ -107,8 +107,8 @@ namespace imhr
             return;
         lastScrollUpdate = now;
 
-        display.setFont(u8g2_font_5x7_tr);
-        int textWidth = display.getStrWidth(scrollMessage.c_str());
+        display.setFont(u8g2_font_5x7_tf);
+        int textWidth = display.getUTF8Width(scrollMessage.c_str());
 
         scrollOffset++;
         if (scrollOffset > textWidth + scrollResetGapPx)
@@ -118,7 +118,7 @@ namespace imhr
         display.setDrawColor(0);
         display.drawBox(0, 56, 128, 8); // clear bottom row
         display.setDrawColor(1);
-        display.drawStr(128 - scrollOffset, 62, scrollMessage.c_str());
+        display.drawUTF8(128 - scrollOffset, 62, scrollMessage.c_str());
         display.sendBuffer();
     }
 
