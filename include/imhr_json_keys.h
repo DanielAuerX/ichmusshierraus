@@ -17,3 +17,8 @@
 #define JSON_KEY_SERVICE_TYPES "serviceTypes"
 #define JSON_KEY_STATION "station"
 #define JSON_KEY_ID "id"
+#define JSON_KEY_ANNOUNCEMENTS "announcements"
+#define JSON_KEY_LOCATIONS "locations"
+#define JSON_KEY_SUMMARY "summary"
+#define JSON_KEY_LANGUAGE "language"
+#define JSON_KEY_REASON "reason"

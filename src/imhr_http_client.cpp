@@ -9,7 +9,8 @@ namespace imhr
     static const char *hvvUser = HVV_USER;
     static const char *hvvSecret = HVV_SECRET;
 
-    static String signRequest(const char *payload, const char *secret)
+    // todo make static again
+     String signRequest(const char *payload, const char *secret)
     {
         byte hmac[20];
         mbedtls_md_context_t ctx;

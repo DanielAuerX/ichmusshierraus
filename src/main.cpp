@@ -1,7 +1,8 @@
 #include <Wire.h>
 #include "imhr_wifi.h"
 #include "imhr_display.h"
-#include "imhr_diparture.h"
+#include "imhr_announcement.h"
+#include "imhr_departure.h"
 #include "esp_sleep.h"
 
 const uint32_t wifiRetryDelay = 600000;      // 10 minutes
@@ -56,11 +57,34 @@ void loop()
   }
   counter = 0;
   imhr::displayWake();
-  imhr::BusDeparture bus = imhr::fetchBusDeparture();
-  imhr::TrainDeparture train = imhr::fetchTrainDeparture();
 
-  imhr::displayDeparture(bus.line.c_str(), bus.minutes, train.line.c_str(), train.minutes);
-  Serial.println("----------");
+  static unsigned long lastDepartureFetch = 0;
+  static unsigned long lastAnnouncementFetch = 0;
+  unsigned long now = millis();
 
-  delay(shortPollingInterval);
+  const uint32_t announcementPollingInterval = shortPollingInterval * 20; // 10 minutes
+
+  if (lastDepartureFetch == 0 || now - lastDepartureFetch >= shortPollingInterval)
+  {
+    lastDepartureFetch = now;
+
+    imhr::BusDeparture bus = imhr::fetchBusDeparture();
+    imhr::TrainDeparture train = imhr::fetchTrainDeparture();
+
+    imhr::displayDeparture(bus.line.c_str(), bus.minutes, train.line.c_str(), train.minutes);
+
+    Serial.println("----------");
+  }
+
+  if (lastAnnouncementFetch == 0 || now - lastAnnouncementFetch >= announcementPollingInterval)
+  {
+    lastAnnouncementFetch = now;
+    Serial.printf("announcement fetch: %lu; free heap space before fetch: %lu\n", now, ESP.getFreeHeap());
+    imhr::Announcement announcement = imhr::fetchAnnouncement();
+    imhr::setAnnouncementMessage(announcement.hasMessage ? announcement.summary.c_str() : nullptr);
+    Serial.printf("free heap space after fetch: %lu\n", ESP.getFreeHeap());
+  }
+
+  imhr::tickScroll();
+  delay(1);
 }

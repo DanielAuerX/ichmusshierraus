@@ -9,4 +9,6 @@ namespace imhr
     void displayMessage(const char *line1, const char *line2 = nullptr);
     void displayDeparture(const char *busLine, int busMins,
                           const char *trainPlatform, int trainMins);
+    void tickScroll();
+    void setAnnouncementMessage(const char *message);
 }

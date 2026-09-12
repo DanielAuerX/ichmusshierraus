@@ -1,4 +1,4 @@
-#include "imhr_diparture.h"
+#include "imhr_departure.h"
 #include "imhr_json_keys.h"
 #include "imhr_endpoints.h"
 #include <HTTPClient.h>
