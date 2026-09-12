@@ -21,8 +21,8 @@ int counter = 0;
 
 static SemaphoreHandle_t dataMutex;
 
-static imhr::BusDeparture sharedBus = {"Bus", -1};
-static imhr::TrainDeparture sharedTrain = {"Zug", -1};
+static imhr::BusDeparture sharedBus = {"bus", -1};
+static imhr::TrainDeparture sharedTrain = {"train", -1};
 static imhr::Announcement sharedAnnouncement = {false, ""};
 static bool departureDirty = false;
 static bool announcementDirty = false;

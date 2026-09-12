@@ -44,20 +44,16 @@ namespace imhr
         for (JsonObject location : announcement[JSON_KEY_LOCATIONS].as<JsonArray>())
         {
             String name = location["name"].as<String>();
-            if (name == ANNOUNCEMENT_LINE)
+            if (name.startsWith(ANNOUNCEMENT_LINE))
                 return true;
         }
         return false;
     }
 
-    Announcement fetchAnnouncement()
+    static bool requestAnnouncements(HTTPClient &http, const String &body, const String &signature)
     {
-        String body = buildAnnouncementsBody();
-        String signature = signRequest(body.c_str(), HVV_SECRET);
-
-        HTTPClient http;
         http.begin(announcementsUrl);
-        http.setTimeout(15000); // large response body; default stream read timeout is too short
+        http.setTimeout(15000);
         http.addHeader("Content-Type", "application/json");
         http.addHeader("geofox-auth-user", HVV_USER);
         http.addHeader("geofox-auth-signature", signature);
@@ -66,28 +62,38 @@ namespace imhr
         if (code != 200)
         {
             Serial.printf("Announcements HTTP error: %d\n", code);
-            http.end();
-            return {false, ""};
+            return false;
         }
+        return true;
+    }
 
+    static JsonDocument buildAnnouncementFilter()
+    {
         JsonDocument filter;
         filter["announcements"][0]["locations"][0]["name"] = true;
         filter["announcements"][0]["summary"] = true;
         filter["announcements"][0]["reason"] = true;
+        return filter;
+    }
 
-        JsonDocument doc;
-        DeserializationError error = deserializeJson(doc, http.getStream(), DeserializationOption::Filter(filter));
-        http.end();
+    static bool parseAnnouncements(Stream &stream, JsonDocument &doc)
+    {
+        JsonDocument filter = buildAnnouncementFilter();
+        DeserializationError error = deserializeJson(doc, stream, DeserializationOption::Filter(filter));
         Serial.printf("free heap after parsing: %d\n", ESP.getFreeHeap());
 
         if (error)
         {
             Serial.printf("ERROR: announcements json error: %s\n", error.c_str());
-            return {false, ""};
+            return false;
         }
+        return true;
+    }
 
+    static String collectMatchingSummaries(JsonDocument &doc, int &matchCount)
+    {
         String combined;
-        int matchCount = 0;
+        matchCount = 0;
 
         for (JsonObject announcement : doc[JSON_KEY_ANNOUNCEMENTS].as<JsonArray>())
         {
@@ -109,6 +115,31 @@ namespace imhr
             combined += summary;
             matchCount++;
         }
+
+        return combined;
+    }
+
+    Announcement fetchAnnouncement()
+    {
+        String body = buildAnnouncementsBody();
+        String signature = signRequest(body.c_str(), HVV_SECRET);
+
+        HTTPClient http;
+        if (!requestAnnouncements(http, body, signature))
+        {
+            http.end();
+            return {false, ""};
+        }
+
+        JsonDocument doc;
+        bool parsed = parseAnnouncements(http.getStream(), doc);
+        http.end();
+
+        if (!parsed)
+            return {false, ""};
+
+        int matchCount;
+        String combined = collectMatchingSummaries(doc, matchCount);
 
         if (matchCount == 0)
             return {false, ""};
